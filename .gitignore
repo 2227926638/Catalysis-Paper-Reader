@@ -1,0 +1,5 @@
+# 前端项目示例
+node_modules/
+.cache/
+*.pack
+*.log

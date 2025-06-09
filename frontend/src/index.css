@@ -1,0 +1,107 @@
+/* Global styles with vendor prefixes and accessibility improvements */
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background-color: #f0f2f5;
+}
+
+/* Improve user selection compatibility */
+* {
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+}
+
+/* Allow text selection in specific elements */
+input, textarea, [contenteditable="true"] {
+  -webkit-user-select: text;
+  -moz-user-select: text;
+  -ms-user-select: text;
+  user-select: text;
+}
+
+/* Fix width:stretch compatibility */
+.full-width {
+  width: -webkit-fill-available;
+  width: -moz-available;
+  width: stretch;
+}
+
+/* Improve button accessibility */
+button {
+  cursor: pointer;
+}
+
+button:not([aria-label]):not([title]) {
+  position: relative;
+}
+
+button:not([aria-label]):not([title])::after {
+  content: attr(children);
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* Improve form accessibility */
+input:not([placeholder]):not([aria-label]):not([title]),
+textarea:not([placeholder]):not([aria-label]):not([title]) {
+  position: relative;
+}
+
+input:not([placeholder]):not([aria-label]):not([title])::after,
+textarea:not([placeholder]):not([aria-label]):not([title])::after {
+  content: attr(name);
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+code {
+  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
+    monospace;
+}
+
+.ant-layout {
+  background: #fff;
+}
+
+.site-layout-background {
+  background: #fff;
+}
+
+/* 自定义滚动条样式 */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #ccc;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #999;
+}

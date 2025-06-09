@@ -1,0 +1,61 @@
+.app-logo {
+  height: 40px;
+  margin-right: 10px;
+}
+
+.site-layout-background {
+  background: #fff;
+}
+
+.upload-area {
+  padding: 20px;
+  border: 2px dashed #d9d9d9;
+  border-radius: 8px;
+  text-align: center;
+  background: #fafafa;
+  cursor: pointer;
+  transition: border-color 0.3s;
+}
+
+.upload-area:hover {
+  border-color: #1890ff;
+}
+
+.upload-hint {
+  color: #888;
+  margin-top: 8px;
+}
+
+.document-card {
+  margin-bottom: 16px;
+  transition: all 0.3s;
+}
+
+.document-card:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.analysis-result {
+  margin-top: 24px;
+}
+
+.chart-container {
+  height: 400px;
+  margin: 20px 0;
+}
+
+.echarts-visualization {
+  height: 100%;
+  width: 100%;
+}
+
+.file-preview {
+  padding: 16px;
+}
+
+.preview-content {
+  min-height: 300px;
+  padding: 16px;
+  background: #f9f9f9;
+  border-radius: 4px;
+}
