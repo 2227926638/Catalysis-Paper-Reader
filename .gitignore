@@ -8,7 +8,7 @@ node_modules/
 backend/logs/*.log
 backend/cache/
 backend/_pycache_/
-backend/literature_analysis.db
+backend\literature_analysis.db
 *.pdf
 *.docs
 *.doc
