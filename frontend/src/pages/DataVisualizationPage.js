@@ -212,7 +212,39 @@ const DataVisualizationPage = () => {
         }
     };
 
+    // 计算相关系数的辅助函数
+    const calculateCorrelation = (x, y) => {
+        const n = Math.min(x.length, y.length);
+        if (n < 2) return 0;
+        
+        const xSlice = x.slice(0, n);
+        const ySlice = y.slice(0, n);
+        
+        const meanX = xSlice.reduce((sum, val) => sum + val, 0) / n;
+        const meanY = ySlice.reduce((sum, val) => sum + val, 0) / n;
+        
+        let numerator = 0;
+        let sumXSquared = 0;
+        let sumYSquared = 0;
+        
+        for (let i = 0; i < n; i++) {
+            const deltaX = xSlice[i] - meanX;
+            const deltaY = ySlice[i] - meanY;
+            numerator += deltaX * deltaY;
+            sumXSquared += deltaX * deltaX;
+            sumYSquared += deltaY * deltaY;
+        }
+        
+        const denominator = Math.sqrt(sumXSquared * sumYSquared);
+        return denominator === 0 ? 0 : numerator / denominator;
+    };
+
     const handleGenerateChart = () => {
+        if (chartType === 'heatmap' || chartType === 'pairplot') {
+            // 热力图和成对关系图不需要选择X/Y轴
+            setError('');
+            return;
+        }
         if (!xColumn || !yColumn) {
             setError('请选择X轴和Y轴的数据列。');
             return;
@@ -327,87 +359,275 @@ const DataVisualizationPage = () => {
                             >
                                 <MenuItem value="line">折线图</MenuItem>
                                 <MenuItem value="scatter">散点图</MenuItem>
-                                {/* 可以根据需要添加更多图表类型 */}
+                                <MenuItem value="bar">柱状图</MenuItem>
+                                <MenuItem value="heatmap">热力图</MenuItem>
+                                <MenuItem value="pairplot">成对关系图</MenuItem>
                             </Select>
                         </FormControl>
                         <Button variant="contained" onClick={handleGenerateChart}>生成图表</Button>
                     </Box>
 
-                    {xColumn && yColumn && (
-                        <Paper sx={{ p: 2, display: 'flex', flexDirection: 'column', height: 500 }}>
+                    {((xColumn && yColumn) || chartType === 'heatmap' || chartType === 'pairplot') && (
+                        <Paper sx={{ p: 2, display: 'flex', flexDirection: 'column', height: chartType === 'pairplot' ? 800 : 500 }}>
                             <Plot
-                                data={[
-                                    {
-                                        x: chartData.map(row => row[xColumn]),
-                                        y: chartData.map(row => row[yColumn]),
-                                        text: chartData.map(row => row['催化剂名称'] || ''),
-                                        type: chartType === 'line' ? 'scatter' : 'scatter',
-                                        mode: chartType === 'line' ? 'lines+markers+text' : 'markers+text',
-                                        marker: {
-                                            color: '#8884d8',
-                                            size: 8,
-                                            line: {
-                                                color: '#ffffff',
-                                                width: 1
-                                            }
-                                        },
-                                        line: chartType === 'line' ? {
-                                            color: '#8884d8',
-                                            width: 2
-                                        } : undefined,
-                                        textposition: 'top center',
-                                        textfont: {
-                                            size: 10,
-                                            color: '#333'
-                                        },
-                                        name: '数据点',
-                                        hovertemplate: `<b>%{text}</b><br>` +
-                                                      `${availableColumns.find(col => col.id === xColumn)?.label || xColumn}: %{x}<br>` +
-                                                      `${availableColumns.find(col => col.id === yColumn)?.label || yColumn}: %{y}<br>` +
-                                                      '<extra></extra>'
+                                data={(() => {
+                                    // 根据图表类型生成不同的数据配置
+                                    switch (chartType) {
+                                        case 'line':
+                                            return [{
+                                                x: chartData.map(row => row[xColumn]),
+                                                y: chartData.map(row => row[yColumn]),
+                                                text: chartData.map(row => row['催化剂名称'] || ''),
+                                                type: 'scatter',
+                                                mode: 'lines+markers+text',
+                                                marker: {
+                                                    color: '#8884d8',
+                                                    size: 8,
+                                                    line: {
+                                                        color: '#ffffff',
+                                                        width: 1
+                                                    }
+                                                },
+                                                line: {
+                                                    color: '#8884d8',
+                                                    width: 2
+                                                },
+                                                textposition: 'top center',
+                                                textfont: {
+                                                    size: 10,
+                                                    color: '#333'
+                                                },
+                                                name: '数据点',
+                                                hovertemplate: `<b>%{text}</b><br>` +
+                                                              `${availableColumns.find(col => col.id === xColumn)?.label || xColumn}: %{x}<br>` +
+                                                              `${availableColumns.find(col => col.id === yColumn)?.label || yColumn}: %{y}<br>` +
+                                                              '<extra></extra>'
+                                            }];
+                                        case 'scatter':
+                                            return [{
+                                                x: chartData.map(row => row[xColumn]),
+                                                y: chartData.map(row => row[yColumn]),
+                                                text: chartData.map(row => row['催化剂名称'] || ''),
+                                                type: 'scatter',
+                                                mode: 'markers+text',
+                                                marker: {
+                                                    color: '#8884d8',
+                                                    size: 8,
+                                                    line: {
+                                                        color: '#ffffff',
+                                                        width: 1
+                                                    }
+                                                },
+                                                textposition: 'top center',
+                                                textfont: {
+                                                    size: 10,
+                                                    color: '#333'
+                                                },
+                                                name: '数据点',
+                                                hovertemplate: `<b>%{text}</b><br>` +
+                                                              `${availableColumns.find(col => col.id === xColumn)?.label || xColumn}: %{x}<br>` +
+                                                              `${availableColumns.find(col => col.id === yColumn)?.label || yColumn}: %{y}<br>` +
+                                                              '<extra></extra>'
+                                            }];
+                                        case 'bar':
+                                            return [{
+                                                x: chartData.map(row => row[xColumn]),
+                                                y: chartData.map(row => row[yColumn]),
+                                                text: chartData.map(row => row['催化剂名称'] || ''),
+                                                type: 'bar',
+                                                marker: {
+                                                    color: '#8884d8',
+                                                    line: {
+                                                        color: '#ffffff',
+                                                        width: 1
+                                                    }
+                                                },
+                                                textposition: 'outside',
+                                                textfont: {
+                                                    size: 10,
+                                                    color: '#333'
+                                                },
+                                                name: '数据',
+                                                hovertemplate: `<b>%{text}</b><br>` +
+                                                              `${availableColumns.find(col => col.id === xColumn)?.label || xColumn}: %{x}<br>` +
+                                                              `${availableColumns.find(col => col.id === yColumn)?.label || yColumn}: %{y}<br>` +
+                                                              '<extra></extra>'
+                                            }];
+                                        case 'heatmap':
+                                            // 为热力图创建数据矩阵
+                                            const numericColumns = availableColumns.filter(col => {
+                                                return chartData.some(row => !isNaN(parseFloat(row[col.id])));
+                                            });
+                                            const correlationMatrix = [];
+                                            const labels = numericColumns.map(col => col.label);
+                                            
+                                            numericColumns.forEach((colX, i) => {
+                                                const row = [];
+                                                numericColumns.forEach((colY, j) => {
+                                                    const xValues = chartData.map(row => parseFloat(row[colX.id])).filter(val => !isNaN(val));
+                                                    const yValues = chartData.map(row => parseFloat(row[colY.id])).filter(val => !isNaN(val));
+                                                    
+                                                    if (xValues.length > 1 && yValues.length > 1) {
+                                                        // 计算相关系数
+                                                        const correlation = calculateCorrelation(xValues, yValues);
+                                                        row.push(correlation);
+                                                    } else {
+                                                        row.push(0);
+                                                    }
+                                                });
+                                                correlationMatrix.push(row);
+                                            });
+                                            
+                                            return [{
+                                                z: correlationMatrix,
+                                                x: labels,
+                                                y: labels,
+                                                type: 'heatmap',
+                                                colorscale: 'RdBu',
+                                                zmid: 0,
+                                                showscale: true,
+                                                hovertemplate: '%{y} vs %{x}<br>相关系数: %{z:.3f}<extra></extra>'
+                                            }];
+                                        case 'pairplot':
+                                             // 成对关系图：显示所有数值列之间的散点图
+                                             const numericCols = availableColumns.filter(col => {
+                                                 return chartData.some(row => !isNaN(parseFloat(row[col.id])));
+                                             }).slice(0, 3); // 限制最多3列以避免图表过于复杂
+                                             
+                                             const pairplotData = [];
+                                             let traceIndex = 0;
+                                             numericCols.forEach((colX, i) => {
+                                                 numericCols.forEach((colY, j) => {
+                                                     if (i !== j) {
+                                                         const row = Math.floor(traceIndex / (numericCols.length - 1)) + 1;
+                                                         const col = (traceIndex % (numericCols.length - 1)) + 1;
+                                                         pairplotData.push({
+                                                             x: chartData.map(row => parseFloat(row[colX.id])),
+                                                             y: chartData.map(row => parseFloat(row[colY.id])),
+                                                             text: chartData.map(row => row['催化剂名称'] || ''),
+                                                             type: 'scatter',
+                                                             mode: 'markers',
+                                                             marker: {
+                                                                 color: `hsl(${(traceIndex * 60) % 360}, 70%, 50%)`,
+                                                                 size: 6,
+                                                                 opacity: 0.7
+                                                             },
+                                                             name: `${colY.label} vs ${colX.label}`,
+                                                             showlegend: false,
+                                                             hovertemplate: `<b>%{text}</b><br>` +
+                                                                           `${colX.label}: %{x}<br>` +
+                                                                           `${colY.label}: %{y}<br>` +
+                                                                           '<extra></extra>'
+                                                         });
+                                                         traceIndex++;
+                                                     }
+                                                 });
+                                             });
+                                             return pairplotData;
+                                        default:
+                                            return [{
+                                                x: chartData.map(row => row[xColumn]),
+                                                y: chartData.map(row => row[yColumn]),
+                                                text: chartData.map(row => row['催化剂名称'] || ''),
+                                                type: 'scatter',
+                                                mode: 'markers+text',
+                                                marker: {
+                                                    color: '#8884d8',
+                                                    size: 8
+                                                },
+                                                name: '数据点'
+                                            }];
                                     }
-                                ]}
-                                layout={{
-                                    title: {
-                                        text: `${availableColumns.find(col => col.id === yColumn)?.label || yColumn} vs ${availableColumns.find(col => col.id === xColumn)?.label || xColumn}`,
-                                        font: { size: 16 }
-                                    },
-                                    xaxis: {
-                                        title: {
-                                            text: availableColumns.find(col => col.id === xColumn)?.label || xColumn,
-                                            font: { size: 14 }
+                                })()}
+                                layout={(() => {
+                                    // 根据图表类型生成不同的布局配置
+                                    const baseLayout = {
+                                        plot_bgcolor: '#ffffff',
+                                        paper_bgcolor: '#ffffff',
+                                        margin: {
+                                            l: 60,
+                                            r: 30,
+                                            t: 60,
+                                            b: 60
                                         },
-                                        showgrid: true,
-                                        gridcolor: '#e0e0e0',
-                                        zeroline: false
-                                    },
-                                    yaxis: {
-                                        title: {
-                                            text: availableColumns.find(col => col.id === yColumn)?.label || yColumn,
-                                            font: { size: 14 }
-                                        },
-                                        showgrid: true,
-                                        gridcolor: '#e0e0e0',
-                                        zeroline: false
-                                    },
-                                    plot_bgcolor: '#ffffff',
-                                    paper_bgcolor: '#ffffff',
-                                    margin: {
-                                        l: 60,
-                                        r: 30,
-                                        t: 60,
-                                        b: 60
-                                    },
-                                    showlegend: true,
-                                    legend: {
-                                        x: 1,
-                                        y: 1,
-                                        bgcolor: 'rgba(255,255,255,0.8)',
-                                        bordercolor: '#cccccc',
-                                        borderwidth: 1
-                                    },
-                                    hovermode: 'closest'
-                                }}
+                                        hovermode: 'closest'
+                                    };
+                                    
+                                    switch (chartType) {
+                                        case 'heatmap':
+                                            return {
+                                                ...baseLayout,
+                                                title: {
+                                                    text: '数据相关性热力图',
+                                                    font: { size: 16 }
+                                                },
+                                                xaxis: {
+                                                    title: '变量',
+                                                    side: 'bottom'
+                                                },
+                                                yaxis: {
+                                                    title: '变量',
+                                                    autorange: 'reversed'
+                                                },
+                                                showlegend: false
+                                            };
+                                        case 'pairplot':
+                                             return {
+                                                 ...baseLayout,
+                                                 title: {
+                                                     text: '成对关系图 - 数值变量间的关系',
+                                                     font: { size: 16 }
+                                                 },
+                                                 showlegend: false,
+                                                 xaxis: {
+                                                     title: '综合数值变量',
+                                                     showgrid: true,
+                                                     gridcolor: '#e0e0e0'
+                                                 },
+                                                 yaxis: {
+                                                     title: '综合数值变量',
+                                                     showgrid: true,
+                                                     gridcolor: '#e0e0e0'
+                                                 }
+                                             };
+                                        default:
+                                            return {
+                                                ...baseLayout,
+                                                title: {
+                                                    text: chartType === 'bar' ? 
+                                                        `${availableColumns.find(col => col.id === yColumn)?.label || yColumn} 柱状图` :
+                                                        `${availableColumns.find(col => col.id === yColumn)?.label || yColumn} vs ${availableColumns.find(col => col.id === xColumn)?.label || xColumn}`,
+                                                    font: { size: 16 }
+                                                },
+                                                xaxis: {
+                                                    title: {
+                                                        text: availableColumns.find(col => col.id === xColumn)?.label || xColumn,
+                                                        font: { size: 14 }
+                                                    },
+                                                    showgrid: true,
+                                                    gridcolor: '#e0e0e0',
+                                                    zeroline: false
+                                                },
+                                                yaxis: {
+                                                    title: {
+                                                        text: availableColumns.find(col => col.id === yColumn)?.label || yColumn,
+                                                        font: { size: 14 }
+                                                    },
+                                                    showgrid: true,
+                                                    gridcolor: '#e0e0e0',
+                                                    zeroline: false
+                                                },
+                                                showlegend: true,
+                                                legend: {
+                                                    x: 1,
+                                                    y: 1,
+                                                    bgcolor: 'rgba(255,255,255,0.8)',
+                                                    bordercolor: '#cccccc',
+                                                    borderwidth: 1
+                                                }
+                                            };
+                                    }
+                                })()}
                                 config={{
                                     displayModeBar: true,
                                     displaylogo: false,
