@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Container, Typography, Box, Select, MenuItem, FormControl, InputLabel, Button, Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, CircularProgress, Alert } from '@mui/material';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, ScatterChart, Scatter, LabelList } from 'recharts'; // 引入 ScatterChart, Scatter, LabelList
+import Plot from 'react-plotly.js';
 import { getDocuments, getAnalysisResult } from '../services/api';
 
 const DataVisualizationPage = () => {
@@ -334,44 +334,88 @@ const DataVisualizationPage = () => {
                     </Box>
 
                     {xColumn && yColumn && (
-                        <Paper sx={{ p: 2, display: 'flex', flexDirection: 'column', height: 400 }}>
-                            <ResponsiveContainer width="100%" height="100%">
-                                {chartType === 'line' ? (
-                                    <LineChart
-                                        data={chartData}
-                                        margin={{
-                                            top: 5, right: 30, left: 20, bottom: 5,
-                                        }}
-                                    >
-                                        <CartesianGrid strokeDasharray="3 3" />
-                                        <XAxis dataKey={xColumn} type="number" label={{ value: availableColumns.find(col => col.id === xColumn)?.label, position: 'insideBottom', offset: -5 }} padding={{ left: 20, right: 20 }} />
-                                        <YAxis label={{ value: availableColumns.find(col => col.id === yColumn)?.label, angle: -90, position: 'insideLeft' }} />
-                                        <Tooltip />
-                                        <Legend />
-                                        <Line type="monotone" dataKey={yColumn} stroke="#8884d8" activeDot={{ r: 8 }} >
-                                            {/* 添加 LabelList 显示催化剂名称 */}
-                                            <LabelList dataKey="催化剂名称" position="insideTop" offset={10} />
-                                        </Line>
-                                    </LineChart>
-                                ) : (
-                                    <ScatterChart
-                                        data={chartData}
-                                        margin={{
-                                            top: 5, right: 30, left: 20, bottom: 5,
-                                        }}
-                                    >
-                                        <CartesianGrid strokeDasharray="3 3" />
-                                        <XAxis type="number" dataKey={xColumn} name={availableColumns.find(col => col.id === xColumn)?.label} label={{ value: availableColumns.find(col => col.id === xColumn)?.label, position: 'insideBottom', offset: -5 }} padding={{ left: 20, right: 20 }} />
-                                        <YAxis type="number" dataKey={yColumn} name={availableColumns.find(col => col.id === yColumn)?.label} label={{ value: availableColumns.find(col => col.id === yColumn)?.label, angle: -90, position: 'insideLeft' }} />
-                                        <Tooltip cursor={{ strokeDasharray: '3 3' }} />
-                                        <Legend />
-                                        <Scatter name="Data" data={chartData} fill="#8884d8" >
-                                             {/* 添加 LabelList 显示催化剂名称 */}
-                                            <LabelList dataKey="催化剂名称" position="insideTop" offset={10} />
-                                        </Scatter>
-                                    </ScatterChart>
-                                )}
-                            </ResponsiveContainer>
+                        <Paper sx={{ p: 2, display: 'flex', flexDirection: 'column', height: 500 }}>
+                            <Plot
+                                data={[
+                                    {
+                                        x: chartData.map(row => row[xColumn]),
+                                        y: chartData.map(row => row[yColumn]),
+                                        text: chartData.map(row => row['催化剂名称'] || ''),
+                                        type: chartType === 'line' ? 'scatter' : 'scatter',
+                                        mode: chartType === 'line' ? 'lines+markers+text' : 'markers+text',
+                                        marker: {
+                                            color: '#8884d8',
+                                            size: 8,
+                                            line: {
+                                                color: '#ffffff',
+                                                width: 1
+                                            }
+                                        },
+                                        line: chartType === 'line' ? {
+                                            color: '#8884d8',
+                                            width: 2
+                                        } : undefined,
+                                        textposition: 'top center',
+                                        textfont: {
+                                            size: 10,
+                                            color: '#333'
+                                        },
+                                        name: '数据点',
+                                        hovertemplate: `<b>%{text}</b><br>` +
+                                                      `${availableColumns.find(col => col.id === xColumn)?.label || xColumn}: %{x}<br>` +
+                                                      `${availableColumns.find(col => col.id === yColumn)?.label || yColumn}: %{y}<br>` +
+                                                      '<extra></extra>'
+                                    }
+                                ]}
+                                layout={{
+                                    title: {
+                                        text: `${availableColumns.find(col => col.id === yColumn)?.label || yColumn} vs ${availableColumns.find(col => col.id === xColumn)?.label || xColumn}`,
+                                        font: { size: 16 }
+                                    },
+                                    xaxis: {
+                                        title: {
+                                            text: availableColumns.find(col => col.id === xColumn)?.label || xColumn,
+                                            font: { size: 14 }
+                                        },
+                                        showgrid: true,
+                                        gridcolor: '#e0e0e0',
+                                        zeroline: false
+                                    },
+                                    yaxis: {
+                                        title: {
+                                            text: availableColumns.find(col => col.id === yColumn)?.label || yColumn,
+                                            font: { size: 14 }
+                                        },
+                                        showgrid: true,
+                                        gridcolor: '#e0e0e0',
+                                        zeroline: false
+                                    },
+                                    plot_bgcolor: '#ffffff',
+                                    paper_bgcolor: '#ffffff',
+                                    margin: {
+                                        l: 60,
+                                        r: 30,
+                                        t: 60,
+                                        b: 60
+                                    },
+                                    showlegend: true,
+                                    legend: {
+                                        x: 1,
+                                        y: 1,
+                                        bgcolor: 'rgba(255,255,255,0.8)',
+                                        bordercolor: '#cccccc',
+                                        borderwidth: 1
+                                    },
+                                    hovermode: 'closest'
+                                }}
+                                config={{
+                                    displayModeBar: true,
+                                    displaylogo: false,
+                                    modeBarButtonsToRemove: ['pan2d', 'lasso2d', 'select2d'],
+                                    responsive: true
+                                }}
+                                style={{ width: '100%', height: '100%' }}
+                            />
                         </Paper>
                     )}
                 </Box>
