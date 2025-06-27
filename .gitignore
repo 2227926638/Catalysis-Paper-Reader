@@ -17,3 +17,5 @@ gemini-fullstack-langgraph-quickstart-main/
 
 # YoYo AI version control directory
 .yoyo/
+Catalysis-Paper-Reader\backend\uploads\
+Catalysis-Paper-Reader\backend\__pycache__
