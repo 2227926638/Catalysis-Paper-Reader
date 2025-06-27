@@ -4,11 +4,11 @@ node_modules/
 *.pack
 *.log
 
-#后端
+# 后端相关文件
 backend/logs/*.log
 backend/cache/
-backend/_pycache_/
-backend\literature_analysis.db
+backend/__pycache__/
+backend/literature_analysis.db
 *.pdf
 *.docs
 *.doc
@@ -17,3 +17,7 @@ gemini-fullstack-langgraph-quickstart-main/
 
 # YoYo AI version control directory
 .yoyo/
+
+# 上传文件和缓存
+backend/uploads/
+backend/__pycache__/
