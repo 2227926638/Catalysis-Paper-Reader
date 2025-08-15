@@ -91,18 +91,18 @@ const DataVisualizationPage = () => {
         }
     };
 
-    // 提取表格数据
+    // 从AI响应中提取表格数据
     const extractTableData = (data) => {
-        // 尝试从多个可能的字段中获取活性数据
+        // 尝试从不同的字段中获取活性数据
         let activityData = null;
         
-        // 检查不同的可能字段名
+        // 优先查找催化活性数据字段
         if (data && data.催化活性数据) {
             activityData = data.催化活性数据;
         } else if (data && data.活性数据) {
-            // 如果活性数据是数组格式，需要转换为markdown表格
+            // 处理数组格式的活性数据
             if (Array.isArray(data.活性数据)) {
-                // 将JSON数组转换为markdown表格格式
+                // 将数组转换为markdown表格格式
                 const arrayData = data.活性数据;
                 if (arrayData.length > 0) {
                     const headers = Object.keys(arrayData[0]);
@@ -122,7 +122,7 @@ const DataVisualizationPage = () => {
         } else if (data && data.activity_data_markdown) {
             activityData = data.activity_data_markdown;
         }
-        
+
         if (!activityData) {
             message.warning('AI响应中未找到活性数据，请检查数据格式');
             setAvailableColumns([]);
@@ -140,14 +140,14 @@ const DataVisualizationPage = () => {
             return;
         }
 
-        // 查找表头行（通常包含 | 分隔符）
+        // 查找表头行和数据开始行
         let headerLineIndex = -1;
         let dataStartIndex = -1;
         
         for (let i = 0; i < lines.length; i++) {
             if (lines[i].includes('|') && !lines[i].includes('---')) {
                 headerLineIndex = i;
-                // 跳过可能的分隔行
+                // 数据行通常在表头的下一行，或者跳过分隔符行
                 dataStartIndex = i + 1;
                 if (dataStartIndex < lines.length && lines[dataStartIndex].includes('---')) {
                     dataStartIndex++;
@@ -174,7 +174,7 @@ const DataVisualizationPage = () => {
             return;
         }
 
-        // 更新可用列选项
+        // 动态生成列定义
         const dynamicCols = headers.map(header => ({ id: header, label: header }));
         setAvailableColumns(dynamicCols);
 
@@ -203,74 +203,42 @@ const DataVisualizationPage = () => {
             case 'line':
                 return [{
                     x: chartData.map(row => row[xColumn]),
-                    y: chartData.map(row => row[yColumn]),
-                    text: chartData.map(row => row['催化剂名称'] || ''),
+                    y: chartData.map(row => parseFloat(row[yColumn]) || 0),
                     type: 'scatter',
-                    mode: 'lines+markers+text',
-                    marker: {
-                        color: '#1890ff',
-                        size: 8,
-                        line: { color: '#ffffff', width: 1 }
-                    },
+                    mode: 'lines+markers',
+                    name: `${yColumn} vs ${xColumn}`,
                     line: { color: '#1890ff', width: 2 },
-                    textposition: 'top center',
-                    textfont: { size: 10, color: '#333' },
-                    name: '数据点',
-                    hovertemplate: `<b>%{text}</b><br>` +
-                                  `${availableColumns.find(col => col.id === xColumn)?.label || xColumn}: %{x}<br>` +
-                                  `${availableColumns.find(col => col.id === yColumn)?.label || yColumn}: %{y}<br>` +
-                                  '<extra></extra>'
+                    marker: { color: '#1890ff', size: 6 }
                 }];
             case 'scatter':
                 return [{
                     x: chartData.map(row => row[xColumn]),
-                    y: chartData.map(row => row[yColumn]),
-                    text: chartData.map(row => row['催化剂名称'] || ''),
+                    y: chartData.map(row => parseFloat(row[yColumn]) || 0),
                     type: 'scatter',
-                    mode: 'markers+text',
-                    marker: {
-                        color: '#1890ff',
-                        size: 8,
-                        line: { color: '#ffffff', width: 1 }
-                    },
-                    textposition: 'top center',
-                    textfont: { size: 10, color: '#333' },
-                    name: '数据点',
-                    hovertemplate: `<b>%{text}</b><br>` +
-                                  `${availableColumns.find(col => col.id === xColumn)?.label || xColumn}: %{x}<br>` +
-                                  `${availableColumns.find(col => col.id === yColumn)?.label || yColumn}: %{y}<br>` +
-                                  '<extra></extra>'
+                    mode: 'markers',
+                    name: `${yColumn} vs ${xColumn}`,
+                    marker: { color: '#52c41a', size: 8 }
                 }];
             case 'bar':
                 return [{
                     x: chartData.map(row => row[xColumn]),
-                    y: chartData.map(row => row[yColumn]),
-                    text: chartData.map(row => row['催化剂名称'] || ''),
+                    y: chartData.map(row => parseFloat(row[yColumn]) || 0),
                     type: 'bar',
-                    marker: {
-                        color: '#1890ff',
-                        line: { color: '#ffffff', width: 1 }
-                    },
-                    textposition: 'outside',
-                    textfont: { size: 10, color: '#333' },
-                    name: '数据',
-                    hovertemplate: `<b>%{text}</b><br>` +
-                                  `${availableColumns.find(col => col.id === xColumn)?.label || xColumn}: %{x}<br>` +
-                                  `${availableColumns.find(col => col.id === yColumn)?.label || yColumn}: %{y}<br>` +
-                                  '<extra></extra>'
+                    name: `${yColumn} vs ${xColumn}`,
+                    marker: { color: '#fa8c16' }
                 }];
             default:
                 return [];
         }
     };
 
-    // 生成表格列配置
+    // 生成表格列定义
     const generateTableColumns = () => {
-        return availableColumns.map(column => ({
-            title: column.label,
-            dataIndex: column.id,
-            key: column.id,
-            ellipsis: true,
+        return availableColumns.map(col => ({
+            title: col.label,
+            dataIndex: col.id,
+            key: col.id,
+            ellipsis: true
         }));
     };
 
@@ -286,7 +254,7 @@ const DataVisualizationPage = () => {
                     AI助手
                 </Button>
             </div>
-            
+
             <Paragraph>
                 选择已分析的文献，系统将自动提取催化活性数据并生成可视化图表。
             </Paragraph>
@@ -299,9 +267,9 @@ const DataVisualizationPage = () => {
                     onChange={handleDocumentChange}
                     loading={loading}
                 >
-                    {documents.map((doc) => (
+                    {documents.map(doc => (
                         <Option key={doc.id} value={doc.id}>
-                            {doc.filename}
+                            {doc.filename || doc.name || `文档 ${doc.id}`}
                         </Option>
                     ))}
                 </Select>
@@ -320,7 +288,7 @@ const DataVisualizationPage = () => {
                 <Card title="提取数据表格" style={{ marginBottom: 16 }}>
                     <Table
                         columns={generateTableColumns()}
-                        dataSource={tableData.map((item, index) => ({ ...item, key: index }))}
+                        dataSource={tableData}
                         pagination={{ pageSize: 10 }}
                         scroll={{ x: 'max-content' }}
                         size="middle"
@@ -340,10 +308,8 @@ const DataVisualizationPage = () => {
                                     value={xColumn}
                                     onChange={setXColumn}
                                 >
-                                    {availableColumns.map((column) => (
-                                        <Option key={column.id} value={column.id}>
-                                            {column.label}
-                                        </Option>
+                                    {availableColumns.map(col => (
+                                        <Option key={col.id} value={col.id}>{col.label}</Option>
                                     ))}
                                 </Select>
                             </Space>
@@ -357,10 +323,8 @@ const DataVisualizationPage = () => {
                                     value={yColumn}
                                     onChange={setYColumn}
                                 >
-                                    {availableColumns.map((column) => (
-                                        <Option key={column.id} value={column.id}>
-                                            {column.label}
-                                        </Option>
+                                    {availableColumns.map(col => (
+                                        <Option key={col.id} value={col.id}>{col.label}</Option>
                                     ))}
                                 </Select>
                             </Space>
@@ -393,12 +357,12 @@ const DataVisualizationPage = () => {
                                 data={generateChartData()}
                                 layout={{
                                     title: {
-                                        text: `${availableColumns.find(col => col.id === yColumn)?.label || yColumn} vs ${availableColumns.find(col => col.id === xColumn)?.label || xColumn}`,
+                                        text: `${yColumn} vs ${xColumn}`,
                                         font: { size: 16 }
                                     },
                                     xaxis: {
                                         title: {
-                                            text: availableColumns.find(col => col.id === xColumn)?.label || xColumn,
+                                            text: xColumn,
                                             font: { size: 14 }
                                         },
                                         showgrid: true,
@@ -407,7 +371,7 @@ const DataVisualizationPage = () => {
                                     },
                                     yaxis: {
                                         title: {
-                                            text: availableColumns.find(col => col.id === yColumn)?.label || yColumn,
+                                            text: yColumn,
                                             font: { size: 14 }
                                         },
                                         showgrid: true,

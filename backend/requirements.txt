@@ -1,17 +1,38 @@
-setuptools==65.5.1
+# Web Framework and Server
 fastapi==0.104.1
 uvicorn==0.24.0
 python-multipart==0.0.6
 pydantic>=2.8.0,<3.0.0
+
+# CORS Support
+fastapi-cors==0.0.6
+
+# Environment Variables
 python-dotenv==1.0.0
+
+# HTTP Requests
 requests==2.31.0
 openai>=1.0.0
-huggingface-hub==0.19.4
-numpy==1.26.2
+
+# Database
 sqlalchemy==2.0.23
+
+# Document Processing
 PyPDF2==3.0.1
 python-docx==1.0.1
-charset-normalizer==3.3.2
+
+# File Processing
 aiofiles==23.2.1
+charset-normalizer==3.3.2
+
+# Data Processing
+numpy==1.26.2
+
+# AI and Machine Learning
+huggingface-hub==0.19.4
+
+# Authentication and Security
 python-jose==3.3.0
-fastapi-cors==0.0.6
+
+# Build Tools
+setuptools==65.5.1

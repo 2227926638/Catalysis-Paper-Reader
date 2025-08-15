@@ -95,6 +95,7 @@ coverage/
 
 # AI和机器学习相关
 .yoyo/
+<<<<<<< HEAD
 models/
 *.pkl
 *.model
@@ -128,3 +129,9 @@ models/
 *.tar.gz
 *.rar
 *.7z
+=======
+
+# 上传文件和缓存
+backend/uploads/
+backend/__pycache__/
+>>>>>>> origin/master
