@@ -24,8 +24,8 @@ from ai_service import call_openrouter_api, analyze_document_content
 from document_processor import DocumentProcessor
 from logger_config import main_logger, ai_response_logger
 
-from pagination_service import PaginationService, VirtualScrollService
-from file_optimizer import file_optimizer, streaming_processor
+# from pagination_service import PaginationService, VirtualScrollService
+# from file_optimizer import file_optimizer, streaming_processor
 
 # 创建FastAPI应用
 app = FastAPI(title="文献分析工具API", description="用于文献上传、分析和数据可视化的API")
@@ -402,57 +402,57 @@ async def get_documents(db: Session = Depends(get_db)):
     documents = db.query(Document).all()
     return [doc.to_dict() for doc in documents]
 
-@app.get("/api/documents/paginated")
-async def get_documents_paginated(
-    page: int = 1,
-    page_size: int = 20,
-    search: str = None,
-    category: str = None,
-    sort_by: str = 'created_at',
-    sort_order: str = 'desc',
-    db: Session = Depends(get_db)
-):
-    """分页获取文档列表"""
-    try:
-        result = PaginationService.paginate_documents(
-            db=db,
-            page=page,
-            page_size=page_size,
-            search_query=search,
-            category=category,
-            sort_by=sort_by,
-            sort_order=sort_order
-        )
-        return result
-    except Exception as e:
-        main_logger.error(f"分页获取文档失败: {e}")
-        raise HTTPException(status_code=500, detail="获取文档列表失败")
+# @app.get("/api/documents/paginated")
+# async def get_documents_paginated(
+#     page: int = 1,
+#     page_size: int = 20,
+#     search: str = None,
+#     category: str = None,
+#     sort_by: str = 'created_at',
+#     sort_order: str = 'desc',
+#     db: Session = Depends(get_db)
+# ):
+#     """分页获取文档列表"""
+#     try:
+#         result = PaginationService.paginate_documents(
+#             db=db,
+#             page=page,
+#             page_size=page_size,
+#             search_query=search,
+#             category=category,
+#             sort_by=sort_by,
+#             sort_order=sort_order
+#         )
+#         return result
+#     except Exception as e:
+#         main_logger.error(f"分页获取文档失败: {e}")
+#         raise HTTPException(status_code=500, detail="获取文档列表失败")
 
-@app.get("/api/documents/virtual-scroll")
-async def get_documents_virtual_scroll(
-    start_index: int,
-    end_index: int,
-    search: str = None,
-    category: str = None,
-    sort_by: str = 'created_at',
-    sort_order: str = 'desc',
-    db: Session = Depends(get_db)
-):
-    """虚拟滚动获取文档数据"""
-    try:
-        result = VirtualScrollService.get_virtual_scroll_data(
-            db=db,
-            start_index=start_index,
-            end_index=end_index,
-            search_query=search,
-            category=category,
-            sort_by=sort_by,
-            sort_order=sort_order
-        )
-        return result
-    except Exception as e:
-        main_logger.error(f"虚拟滚动获取文档失败: {e}")
-        raise HTTPException(status_code=500, detail="获取文档数据失败")
+# @app.get("/api/documents/virtual-scroll")
+# async def get_documents_virtual_scroll(
+#     start_index: int,
+#     end_index: int,
+#     search: str = None,
+#     category: str = None,
+#     sort_by: str = 'created_at',
+#     sort_order: str = 'desc',
+#     db: Session = Depends(get_db)
+# ):
+#     """虚拟滚动获取文档数据"""
+#     try:
+#         result = VirtualScrollService.get_virtual_scroll_data(
+#             db=db,
+#             start_index=start_index,
+#             end_index=end_index,
+#             search_query=search,
+#             category=category,
+#             sort_by=sort_by,
+#             sort_order=sort_order
+#         )
+#         return result
+#     except Exception as e:
+#         main_logger.error(f"虚拟滚动获取文档失败: {e}")
+#         raise HTTPException(status_code=500, detail="获取文档数据失败")
 
 @app.get("/api/documents/categories")
 async def get_document_categories(db: Session = Depends(get_db)):
@@ -612,33 +612,33 @@ async def get_catalyst_methods(db: Session = Depends(get_db)):
 
 
 
-@app.get("/api/files/optimize/{document_id}")
-async def optimize_file(document_id: int, db: Session = Depends(get_db)):
-    """优化文件"""
-    try:
-        document = db.query(Document).filter(Document.id == document_id).first()
-        if not document:
-            raise HTTPException(status_code=404, detail="文档不存在")
-        
-        optimized_path = file_optimizer.optimize_file(document.path)
-        return {"optimized_path": optimized_path, "message": "文件优化完成"}
-    except Exception as e:
-        main_logger.error(f"文件优化失败: {e}")
-        raise HTTPException(status_code=500, detail="文件优化失败")
+# @app.get("/api/files/optimize/{document_id}")
+# async def optimize_file(document_id: int, db: Session = Depends(get_db)):
+#     """优化文件"""
+#     try:
+#         document = db.query(Document).filter(Document.id == document_id).first()
+#         if not document:
+#             raise HTTPException(status_code=404, detail="文档不存在")
+#         
+#         optimized_path = file_optimizer.optimize_file(document.path)
+#         return {"optimized_path": optimized_path, "message": "文件优化完成"}
+#     except Exception as e:
+#         main_logger.error(f"文件优化失败: {e}")
+#         raise HTTPException(status_code=500, detail="文件优化失败")
 
-@app.get("/api/files/stream/{document_id}")
-async def stream_file_content(document_id: int, chunk_size: int = 1024, db: Session = Depends(get_db)):
-    """流式读取文件内容"""
-    try:
-        document = db.query(Document).filter(Document.id == document_id).first()
-        if not document:
-            raise HTTPException(status_code=404, detail="文档不存在")
-        
-        content_chunks = streaming_processor.stream_file_content(document.path, chunk_size)
-        return {"chunks": list(content_chunks)}
-    except Exception as e:
-        main_logger.error(f"流式读取文件失败: {e}")
-        raise HTTPException(status_code=500, detail="流式读取文件失败")
+# @app.get("/api/files/stream/{document_id}")
+# async def stream_file_content(document_id: int, chunk_size: int = 1024, db: Session = Depends(get_db)):
+#     """流式读取文件内容"""
+#     try:
+#         document = db.query(Document).filter(Document.id == document_id).first()
+#         if not document:
+#             raise HTTPException(status_code=404, detail="文档不存在")
+#         
+#         content_chunks = streaming_processor.stream_file_content(document.path, chunk_size)
+#         return {"chunks": list(content_chunks)}
+#     except Exception as e:
+#         main_logger.error(f"流式读取文件失败: {e}")
+#         raise HTTPException(status_code=500, detail="流式读取文件失败")
 
 # 启动服务器
 if __name__ == "__main__":
