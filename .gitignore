@@ -38,14 +38,17 @@ env/
 .env
 
 # 数据库文件（运行时生成）
+literature_analysis.db
 backend/literature_analysis.db
 *.sqlite
 *.sqlite3
+*.db
 
 # 上传和结果文件（运行时生成）
 backend/uploads/
 backend/results/
 backend/cache/
+backend/logs/
 
 # 用户上传的文档文件
 *.pdf
@@ -90,15 +93,38 @@ coverage/
 *.key
 *.pem
 
-# YoYo AI version control directory
+# AI和机器学习相关
 .yoyo/
+models/
+*.pkl
+*.model
+*.weights
 
 # Git相关
 .git/
 *.orig
+*.rej
 
-# 其他临时文件
-*~
-.DS_Store
-*.swp
-*.swo
+# 重复的系统文件（已在上面定义）
+# *~
+# .DS_Store
+# *.swp
+# *.swo
+
+# 额外的忽略规则
+# 编辑器和IDE配置
+.vscode/settings.json
+.vscode/launch.json
+.idea/workspace.xml
+.idea/tasks.xml
+
+# 运行时生成的文件
+*.pid
+*.seed
+*.pid.lock
+
+# 压缩文件
+*.zip
+*.tar.gz
+*.rar
+*.7z

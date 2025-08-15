@@ -2,16 +2,18 @@
 
 ## 项目概述
 
-这是一个专门用于催化领域科研文献分析的Web应用程序，支持批量处理PDF格式文献，通过AI技术自动提取催化活性数据、表征手段、催化剂制备方法等关键信息，并提供数据可视化、智能聊天分析等功能。
+这是一个专门用于催化领域科研文献分析的Web应用程序，支持批量处理PDF格式文献，通过AI技术自动提取催化活性数据、表征手段、催化剂制备方法等关键信息，并提供数据可视化、智能聊天分析、实时进度跟踪等功能。该应用采用前后端分离架构，具有高性能和良好的用户体验。
 
 ## 功能特点
 
-- **文献上传与管理**：支持批量上传PDF格式文献，自动分类管理
-- **AI智能分析**：自动提取催化活性数据、表征手段、催化剂制备方法等关键信息
-- **数据可视化**：将活性数据按不同x轴生成折线图、散点图、柱状图等
-- **智能聊天助手**：内嵌AI聊天功能，辅助科研探索和文献分析
-- **实时分析进度**：WebSocket实时跟踪文献分析进度
-- **多文献对比**：支持选择多篇文献进行数据对比分析
+- **文献上传与管理**：支持批量上传PDF格式文献，拖拽上传，自动分类管理
+- **AI智能分析**：基于OpenRouter API自动提取催化活性数据、表征手段、催化剂制备方法等关键信息
+- **数据可视化**：支持多种图表类型（折线图、散点图、柱状图），可配置轴和数据源
+- **智能聊天助手**：内嵌AI聊天功能，基于文献内容进行智能问答和科研探索
+- **实时分析进度**：WebSocket实时跟踪文献分析进度，提供详细状态反馈
+- **多文献对比**：支持选择多篇文献进行数据对比分析和可视化
+- **高性能优化**：支持虚拟滚动、分页加载、文件流式处理等性能优化功能
+- **安全性增强**：添加安全响应头中间件，保护用户数据安全
 
 ## 技术栈
 
@@ -20,18 +22,22 @@
 - Ant Design 5.12.1
 - React Router DOM 6.20.1
 - Plotly.js 3.0.1（数据可视化）
-- PDF.js（PDF文档处理）
-- Axios（HTTP客户端）
+- ECharts 5.4.3（图表库）
+- PDF.js 3.11.174（PDF文档处理）
+- Axios 1.6.2（HTTP客户端）
+- React Window（虚拟滚动优化）
+- Material-UI 5.15.0（UI组件库）
 - WebSocket（实时通信）
 
 ### 后端
-- Python FastAPI 0.104.1
-- SQLite数据库（SQLAlchemy 2.0.23）
-- Uvicorn 0.24.0（ASGI服务器）
-- OpenAI API（AI分析）
-- HuggingFace Hub（AI模型集成）
-- PyPDF2（PDF文档处理）
+- Python FastAPI（Web框架）
+- SQLite数据库（SQLAlchemy ORM）
+- Uvicorn（ASGI服务器）
+- OpenRouter API（AI分析服务）
 - WebSocket（实时通信）
+- 自定义文档处理器（PDF解析）
+- 分页和虚拟滚动服务
+- 文件优化和流式处理
 
 ## 快速启动
 
@@ -91,20 +97,21 @@ npm start
 │   ├── package.json          # 前端依赖配置
 │   └── package-lock.json     # 依赖锁定文件
 ├── backend/                    # 后端FastAPI应用
-│   ├── main.py               # 主应用入口
-│   ├── models.py             # 数据模型
-│   ├── ai_service.py         # AI分析服务
-│   ├── ai_chat.py            # AI聊天服务
-│   ├── document_processor.py # 文档处理服务
-│   ├── websocket_service.py  # WebSocket服务
-│   ├── logger_config.py      # 日志配置
-│   ├── init_db.py           # 数据库初始化
-│   ├── create_dirs.py       # 目录创建脚本
-│   ├── requirements.txt     # Python依赖
+│   ├── main.py               # 主应用入口，包含所有API端点
+│   ├── models.py             # SQLAlchemy数据模型
+│   ├── ai_service.py         # OpenRouter AI分析服务
+│   ├── ai_chat.py            # AI聊天路由和服务
+│   ├── document_processor.py # PDF文档处理服务
+│   ├── websocket_service.py  # WebSocket实时通信服务
+│   ├── logger_config.py      # 日志配置和管理
+│   ├── init_db.py           # 数据库初始化脚本
+│   ├── create_dirs.py       # 运行时目录创建脚本
+│   ├── .env.example         # 环境变量配置示例
 │   ├── uploads/             # 上传文件存储（运行时创建）
-│   ├── results/             # 分析结果存储（运行时创建）
-│   └── literature_analysis.db # SQLite数据库（运行时创建）
-├── start.bat                  # 一键启动脚本
+│   └── results/             # 分析结果存储（运行时创建）
+├── literature_analysis.db     # SQLite数据库文件（运行时创建）
+├── start.bat                  # Windows一键启动脚本
+├── SECURITY.md               # 安全策略文档
 ├── .gitignore                # Git忽略文件配置
 └── README.md                 # 项目说明文档
 ```
@@ -152,15 +159,17 @@ npm start
 - Node.js 16+
 - Python 3.8+
 - 现代浏览器（Chrome、Firefox、Safari、Edge）
-- OpenAI API密钥（用于AI分析功能）
+- OpenRouter API密钥（用于AI分析功能）
 
 ## 注意事项
 
 1. 首次启动时会自动安装依赖，请耐心等待
-2. 需要配置OpenAI API密钥才能使用AI分析功能
-3. 如遇端口冲突，前端会自动切换到可用端口
+2. 需要配置OpenRouter API密钥才能使用AI分析功能，请参考backend/.env.example文件
+3. 如遇端口冲突，前端会自动切换到可用端口（默认3002）
 4. 建议使用start.bat脚本启动以获得最佳体验
-5. 上传的PDF文件和分析结果会保存在本地，请注意数据安全
+5. 上传的PDF文件和分析结果会保存在本地backend目录下，请注意数据安全
+6. 应用支持虚拟滚动和分页加载，可处理大量文献数据
+7. WebSocket连接用于实时进度跟踪，请确保网络连接稳定
 
 ## 开发状态
 
