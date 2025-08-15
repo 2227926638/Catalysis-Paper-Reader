@@ -7,7 +7,7 @@ import './App.css';
 // 导入页面组件
 import UploadPage from './pages/UploadPage';
 import AnalysisPage from './pages/AnalysisPage';
-import DataVisualizationPage from './pages/datavisualizationpage';
+import DataVisualizationPage from './pages/DataVisualizationPage';
 
 // 导入Context Provider
 import { AppProvider } from './context/AppContext';
