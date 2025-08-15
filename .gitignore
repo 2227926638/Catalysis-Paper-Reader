@@ -37,9 +37,22 @@ ENV/
 env/
 .env
 
-# 数据库文件
+# 数据库文件（运行时生成）
+backend/literature_analysis.db
 *.sqlite
 *.sqlite3
+
+# 上传和结果文件（运行时生成）
+backend/uploads/
+backend/results/
+backend/cache/
+
+# 用户上传的文档文件
+*.pdf
+*.doc
+*.docx
+*.txt
+*.rtf
 
 # IDE和编辑器
 .vscode/
@@ -71,10 +84,21 @@ dist/
 coverage/
 .nyc_output
 
-# 根目录多余文件（实际项目在frontend/backend子目录）
-/package.json
-/package-lock.json
-/src/
+# API密钥和敏感配置
+.env.local
+.env.production
+*.key
+*.pem
 
 # YoYo AI version control directory
 .yoyo/
+
+# Git相关
+.git/
+*.orig
+
+# 其他临时文件
+*~
+.DS_Store
+*.swp
+*.swo
