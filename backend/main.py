@@ -24,8 +24,13 @@ from ai_service import call_openrouter_api, analyze_document_content
 from document_processor import DocumentProcessor
 from logger_config import main_logger, ai_response_logger
 
+# from pagination_service import PaginationService, VirtualScrollService
+# from file_optimizer import file_optimizer, streaming_processor
+
 # 创建FastAPI应用
 app = FastAPI(title="文献分析工具API", description="用于文献上传、分析和数据可视化的API")
+
+
 
 # 配置CORS和安全响应头中间件
 from fastapi.middleware.cors import CORSMiddleware
@@ -183,6 +188,10 @@ async def analyze_document_with_ai(document_path: str, document_id: int):
         abstract = result_json.get("摘要", "")
         keywords = json.dumps(result_json.get("关键词", []), ensure_ascii=False)
         
+        # 提取AI识别的催化反应类型
+        ai_reaction_type = result_json.get("催化反应类型", "")
+        main_logger.info(f"文档 {document_id} AI识别的反应类型: {ai_reaction_type}")
+        
         # 保存分析结果
         analysis = Analysis(
             document_id=document_id,
@@ -199,10 +208,18 @@ async def analyze_document_with_ai(document_path: str, document_id: int):
         db.add(analysis)
         db.commit()
         
-        # 更新文档状态
+        # 更新文档状态和AI识别的反应类型
         document = db.query(Document).filter(Document.id == document_id).first()
         if document:
             document.status = "analyzed"
+            # 如果AI成功识别了反应类型，则更新文档的category字段
+            if ai_reaction_type and ai_reaction_type.strip():
+                document.category = ai_reaction_type
+                main_logger.info(f"文档 {document_id} 的分类已更新为: {ai_reaction_type}")
+            else:
+                # 如果AI没有识别出反应类型，保持category为空
+                document.category = ""
+                main_logger.info(f"文档 {document_id} 未能识别出催化反应类型，分类保持为空")
             db.commit()
         
         # 更新最终进度状态
@@ -301,7 +318,6 @@ async def get_analysis_progress(document_id: int):
 async def upload_file(
     background_tasks: BackgroundTasks,
     file: UploadFile = File(...),
-    category: str = Form("未分类"),
     db: Session = Depends(get_db)
 ):
     """上传文献文件并保存到数据库"""
@@ -346,7 +362,7 @@ async def upload_file(
             name=file.filename,
             type=file_type,
             path=file_path,
-            category=category,
+            category="",  # 初始为空，等待AI分析后填入催化反应类型
             status="uploaded"  # 先设置为已上传状态
         )
         
@@ -385,6 +401,68 @@ async def get_documents(db: Session = Depends(get_db)):
     """获取所有已上传的文档"""
     documents = db.query(Document).all()
     return [doc.to_dict() for doc in documents]
+
+# @app.get("/api/documents/paginated")
+# async def get_documents_paginated(
+#     page: int = 1,
+#     page_size: int = 20,
+#     search: str = None,
+#     category: str = None,
+#     sort_by: str = 'created_at',
+#     sort_order: str = 'desc',
+#     db: Session = Depends(get_db)
+# ):
+#     """分页获取文档列表"""
+#     try:
+#         result = PaginationService.paginate_documents(
+#             db=db,
+#             page=page,
+#             page_size=page_size,
+#             search_query=search,
+#             category=category,
+#             sort_by=sort_by,
+#             sort_order=sort_order
+#         )
+#         return result
+#     except Exception as e:
+#         main_logger.error(f"分页获取文档失败: {e}")
+#         raise HTTPException(status_code=500, detail="获取文档列表失败")
+
+# @app.get("/api/documents/virtual-scroll")
+# async def get_documents_virtual_scroll(
+#     start_index: int,
+#     end_index: int,
+#     search: str = None,
+#     category: str = None,
+#     sort_by: str = 'created_at',
+#     sort_order: str = 'desc',
+#     db: Session = Depends(get_db)
+# ):
+#     """虚拟滚动获取文档数据"""
+#     try:
+#         result = VirtualScrollService.get_virtual_scroll_data(
+#             db=db,
+#             start_index=start_index,
+#             end_index=end_index,
+#             search_query=search,
+#             category=category,
+#             sort_by=sort_by,
+#             sort_order=sort_order
+#         )
+#         return result
+#     except Exception as e:
+#         main_logger.error(f"虚拟滚动获取文档失败: {e}")
+#         raise HTTPException(status_code=500, detail="获取文档数据失败")
+
+@app.get("/api/documents/categories")
+async def get_document_categories(db: Session = Depends(get_db)):
+    """获取所有文档分类"""
+    try:
+        categories = PaginationService.get_document_categories(db)
+        return {"categories": categories}
+    except Exception as e:
+        main_logger.error(f"获取文档分类失败: {e}")
+        raise HTTPException(status_code=500, detail="获取分类失败")
 
 @app.get("/api/documents/{document_id}")
 async def get_document(document_id: int, db: Session = Depends(get_db)):
@@ -532,8 +610,38 @@ async def get_catalyst_methods(db: Session = Depends(get_db)):
     
     return catalyst_methods
 
+
+
+# @app.get("/api/files/optimize/{document_id}")
+# async def optimize_file(document_id: int, db: Session = Depends(get_db)):
+#     """优化文件"""
+#     try:
+#         document = db.query(Document).filter(Document.id == document_id).first()
+#         if not document:
+#             raise HTTPException(status_code=404, detail="文档不存在")
+#         
+#         optimized_path = file_optimizer.optimize_file(document.path)
+#         return {"optimized_path": optimized_path, "message": "文件优化完成"}
+#     except Exception as e:
+#         main_logger.error(f"文件优化失败: {e}")
+#         raise HTTPException(status_code=500, detail="文件优化失败")
+
+# @app.get("/api/files/stream/{document_id}")
+# async def stream_file_content(document_id: int, chunk_size: int = 1024, db: Session = Depends(get_db)):
+#     """流式读取文件内容"""
+#     try:
+#         document = db.query(Document).filter(Document.id == document_id).first()
+#         if not document:
+#             raise HTTPException(status_code=404, detail="文档不存在")
+#         
+#         content_chunks = streaming_processor.stream_file_content(document.path, chunk_size)
+#         return {"chunks": list(content_chunks)}
+#     except Exception as e:
+#         main_logger.error(f"流式读取文件失败: {e}")
+#         raise HTTPException(status_code=500, detail="流式读取文件失败")
+
 # 启动服务器
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run("main:app", host="", port=8000, reload=True)
+    uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)
 # 调试信息已注释掉

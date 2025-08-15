@@ -21,6 +21,8 @@
     "react-plotly.js": "^2.6.0",
     "react-router-dom": "^6.20.1",
     "react-scripts": "5.0.1",
+    "react-window": "^1.8.11",
+    "react-window-infinite-loader": "^1.0.10",
     "recharts": "^2.10.0"
   },
   "scripts": {

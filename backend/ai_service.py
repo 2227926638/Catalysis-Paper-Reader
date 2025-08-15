@@ -5,6 +5,7 @@ import requests
 import re
 from dotenv import load_dotenv
 from logger_config import main_logger as logger, ai_response_logger
+from openai import OpenAI
 
 # 指定环境变量文件路径
 env_path = os.path.join(os.path.dirname(__file__), '.env')
@@ -35,58 +36,39 @@ OPENAI_SERVICE_TYPE = os.getenv("OPENAI_SERVICE_TYPE")
 OPENAI_TEMPERATURE = float(os.getenv("OPENAI_TEMPERATURE", "0.7"))
 
 def call_openrouter_api(messages: List[Dict[str, str]]) -> Dict:
-    """调用OpenRouter API进行对话"""
+    """调用DeepSeek API进行对话"""
     try:
-        # 规范化API端点URL
-        if not OPENAI_API_ENDPOINT.endswith('/'):
-            OPENAI_API_ENDPOINT_NORMALIZED = OPENAI_API_ENDPOINT + '/'
-        else:
-            OPENAI_API_ENDPOINT_NORMALIZED = OPENAI_API_ENDPOINT
-        
-        # 构建完整请求URL
-        api_url = f"{OPENAI_API_ENDPOINT_NORMALIZED}chat/completions"
-        
-        # 创建请求payload
-        payload = {
-            "model": OPENAI_SERVICE_TYPE,
-            "messages": messages,
-            "temperature": OPENAI_TEMPERATURE,
-            "stream": False
-        }
-        
-        # 修改请求部分
-        response = requests.post(
-            url=api_url,
-            headers={
-                "Authorization": f"Bearer {OPENAI_API_KEY}",
-                "Content-Type": "application/json",
-                "HTTP-Referer": "http://localhost:3000",
-                "X-Title": "Literature Analysis Tool",
-                "User-Agent": "Literature Analysis Tool/1.0.0"
-            },
-            json=payload,
-            timeout=30
+        # 初始化OpenAI客户端，使用DeepSeek API
+        client = OpenAI(
+            api_key=OPENAI_API_KEY,
+            base_url=OPENAI_API_ENDPOINT
         )
         
-        # Add response status check
-        if response.status_code != 200:
-            print(f"\n❌ API Error: {response.status_code}")
-            print(f"Response: {response.text}")
-            raise requests.exceptions.RequestException(f"API返回错误状态码: {response.status_code}")
-            
-        # 添加响应编码设置
-        response.encoding = 'utf-8'
-        response.raise_for_status()
+        # 调用DeepSeek API
+        response = client.chat.completions.create(
+            model=OPENAI_SERVICE_TYPE,
+            messages=messages,
+            temperature=OPENAI_TEMPERATURE,
+            stream=False
+        )
         
-        return response.json()
+        # 转换响应格式以保持与原有代码的兼容性
+        return {
+            "choices": [{
+                "message": {
+                    "content": response.choices[0].message.content,
+                    "role": response.choices[0].message.role
+                }
+            }],
+            "usage": {
+                "prompt_tokens": response.usage.prompt_tokens if response.usage else 0,
+                "completion_tokens": response.usage.completion_tokens if response.usage else 0,
+                "total_tokens": response.usage.total_tokens if response.usage else 0
+            }
+        }
     
-    except requests.exceptions.RequestException as e:
-        logger.error(f"Request failed: {type(e).__name__} - {str(e)}", exc_info=True)
-        # 打印更详细的错误信息，帮助诊断是否是 requests 库内部问题
-        if hasattr(e, 'request') and e.request:
-            logger.error(f"Request details: Method={e.request.method}, URL={e.request.url}")
-        if hasattr(e, 'response') and e.response is not None:
-            logger.error(f"Response details: Status={e.response.status_code}, Body={e.response.text[:500]}")
+    except Exception as e:
+        logger.error(f"DeepSeek API调用失败: {type(e).__name__} - {str(e)}", exc_info=True)
         raise
     except Exception as e:
         logger.error(f"API call failed: {type(e).__name__} - {str(e)}", exc_info=True)
@@ -111,11 +93,12 @@ def analyze_document_content(document_content: str) -> Dict:
         4. 发表年份
         5. 摘要
         6. 关键词
-        7. 催化剂制备方法
-        8. 表征手段及结论
-        9. 主要founded发现
-        10. 结论
-        11. 实验价值与启示：你是一名从事热催化的研究者，这篇文献对你在催化剂的理解上，以及催化剂制备法上，以及表征手段上有哪些启示，你在这其中学到了什么，输出一段条理清晰的文字
+        7. 催化反应类型：请根据文献内容判断该研究涉及的催化反应类型，必须从以下列表中选择一个最匹配的类型：["合成氨", "甲烷干重整", "一氧化碳加氢", "甲醇合成", "乙炔加氢", "一氧化碳氧化", "烯烃聚合", "石油催化裂化", "费托合成", "选择性催化还原"]。如果文献涉及多种反应，请选择主要研究的反应类型。如果都不匹配，请选择最相近的类型。
+        8. 催化剂制备方法
+        9. 表征手段及结论
+        10. 主要founded发现
+        11. 结论
+        12. 实验价值与启示：你是一名从事热催化的研究者，这篇文献对你在催化剂的理解上，以及催化剂制备法上，以及表征手段上有哪些启示，你在这其中学到了什么，输出一段条理清晰的文字
         请以纯粹的JSON格式返回结果，不包含任何额外的文本、解释或Markdown代码块（例如 ```json ）。结果必须是一个有效的JSON对象，包含以上所有字段。对于催化剂制备法、表征手段及结论、结论和实验价值与启示，请尽可能详细提取并结构化。
 
 文献内容：

@@ -1,35 +1,67 @@
-# 文献分析与总结Web应用
+# 催化文献分析与总结Web应用
 
 ## 项目概述
 
-这是一个基于Web的应用程序，用于批量处理科研文献（PDF、Word格式），通过AI技术提取特定信息，并提供数据可视化、文献总结和专业分析功能。
+这是一个专门用于催化领域科研文献分析的Web应用程序，支持批量处理PDF格式文献，通过AI技术自动提取催化活性数据、表征手段、催化剂制备方法等关键信息，并提供数据可视化、智能聊天分析、实时进度跟踪等功能。该应用采用前后端分离架构，具有高性能和良好的用户体验。
 
 ## 功能特点
 
-- 支持批量上传PDF、Word格式文献
-- 文献分类管理（按主题、日期、作者等）
-- AI自动提取关键信息（实验数据、研究方法、材料性能参数等）
-- 数据可视化（时间趋势图、性能对比图等）
-- 文献综合分析（对比分析、趋势报告、研究热点识别）
-- 分析报告导出（PDF、Word、Excel等格式）
+- **文献上传与管理**：支持批量上传PDF格式文献，拖拽上传，自动分类管理
+- **AI智能分析**：基于OpenRouter API自动提取催化活性数据、表征手段、催化剂制备方法等关键信息
+- **数据可视化**：支持多种图表类型（折线图、散点图、柱状图），可配置轴和数据源
+- **智能聊天助手**：内嵌AI聊天功能，基于文献内容进行智能问答和科研探索
+- **实时分析进度**：WebSocket实时跟踪文献分析进度，提供详细状态反馈
+- **多文献对比**：支持选择多篇文献进行数据对比分析和可视化
+- **高性能优化**：支持虚拟滚动、分页加载、文件流式处理等性能优化功能
+- **安全性增强**：添加安全响应头中间件，保护用户数据安全
 
 ## 技术栈
 
 ### 前端
-- React.js
-- Ant Design
-- PDF.js & mammoth.js（文档处理）
-- ECharts（数据可视化）
+- React.js 18.2.0
+- Ant Design 5.12.1
+- React Router DOM 6.20.1
+- Plotly.js 3.0.1（数据可视化）
+- ECharts 5.4.3（图表库）
+- PDF.js 3.11.174（PDF文档处理）
+- Axios 1.6.2（HTTP客户端）
+- React Window（虚拟滚动优化）
+- Material-UI 5.15.0（UI组件库）
+- WebSocket（实时通信）
 
 ### 后端
-- Python FastAPI
-- PostgreSQL
-- Elasticsearch
-- AI模型集成
+- Python FastAPI（Web框架）
+- SQLite数据库（SQLAlchemy ORM）
+- Uvicorn（ASGI服务器）
+- OpenRouter API（AI分析服务）
+- WebSocket（实时通信）
+- 自定义文档处理器（PDF解析）
+- 分页和虚拟滚动服务
+- 文件优化和流式处理
 
-## 安装与运行
+## 快速启动
 
-### 前端服务
+### 方式一：使用启动脚本（推荐）
+```bash
+# 双击运行start.bat文件，或在命令行中执行：
+start.bat
+```
+
+### 方式二：手动启动
+
+#### 启动后端服务
+```bash
+# 进入后端目录
+cd backend
+
+# 安装Python依赖
+pip install -r requirements.txt
+
+# 启动后端服务（端口8000）
+python main.py
+```
+
+#### 启动前端服务
 ```bash
 # 进入前端目录
 cd frontend
@@ -37,29 +69,129 @@ cd frontend
 # 安装依赖
 npm install
 
-# 启动开发服务器
+# 启动开发服务器（端口3002或3003）
 npm start
 ```
+
+## 访问应用
+
+- 前端应用：http://localhost:3002 或 http://localhost:3003
+- 后端API：http://localhost:8000
+- API文档：http://localhost:8000/docs
 
 ## 项目结构
 
 ```
-/
-├── public/                 # 静态资源
-├── src/                    # 源代码
-│   ├── components/         # 组件
-│   ├── pages/              # 页面
-│   ├── services/           # API服务
-│   ├── utils/              # 工具函数
-│   ├── App.js              # 应用入口
-│   └── index.js            # 主入口
-└── package.json            # 项目配置
+文章总结工具/
+├── frontend/                    # 前端React应用
+│   ├── public/                 # 静态资源
+│   │   ├── index.html         # 主页面模板
+│   │   ├── manifest.json      # PWA配置
+│   │   └── pdf.worker.js      # PDF.js工作线程
+│   ├── src/                   # 源代码
+│   │   ├── components/        # 可复用组件
+│   │   ├── pages/            # 页面组件
+│   │   ├── services/         # API服务
+│   │   ├── context/          # React Context
+│   │   └── utils/            # 工具函数
+│   ├── package.json          # 前端依赖配置
+│   └── package-lock.json     # 依赖锁定文件
+├── backend/                    # 后端FastAPI应用
+│   ├── main.py               # 主应用入口，包含所有API端点
+│   ├── models.py             # SQLAlchemy数据模型
+│   ├── ai_service.py         # OpenRouter AI分析服务
+│   ├── ai_chat.py            # AI聊天路由和服务
+│   ├── document_processor.py # PDF文档处理服务
+│   ├── websocket_service.py  # WebSocket实时通信服务
+│   ├── logger_config.py      # 日志配置和管理
+│   ├── init_db.py           # 数据库初始化脚本
+│   ├── create_dirs.py       # 运行时目录创建脚本
+│   ├── .env.example         # 环境变量配置示例
+│   ├── uploads/             # 上传文件存储（运行时创建）
+│   └── results/             # 分析结果存储（运行时创建）
+├── literature_analysis.db     # SQLite数据库文件（运行时创建）
+├── start.bat                  # Windows一键启动脚本
+├── SECURITY.md               # 安全策略文档
+├── .gitignore                # Git忽略文件配置
+└── README.md                 # 项目说明文档
 ```
 
-## 开发阶段
+## 主要功能模块
 
-当前处于MVP（最小可行产品）阶段，实现基础功能：
-- 基础文献上传与管理
-- 简单AI文本分析功能
-- 基础数据表格展示
-- 简单可视化图表
+### 1. 文献上传页面
+- 支持拖拽上传PDF文档
+- 文件预览和管理功能
+- 批量上传处理
+- 上传进度实时显示
+
+### 2. 文献分析页面
+- 文档列表展示和筛选
+- AI智能分析结果展示
+- 实时分析进度跟踪
+- 详细分析结果查看
+
+### 3. 数据可视化页面
+- 选择已分析文献
+- 催化活性数据表格展示
+- 多种图表类型（折线图、散点图、柱状图）
+- 可配置图表轴和数据源
+- 多文献数据对比分析
+
+### 4. AI聊天助手
+- 基于文献内容的智能问答
+- 科研探索辅助功能
+- 实时对话交互
+
+## AI分析能力
+
+本应用专门针对催化领域文献进行优化，能够自动提取：
+
+- **催化活性数据**：转化率、选择性、产率等关键数据
+- **表征手段及结论**：XRD、SEM、TEM、XPS等表征结果
+- **催化剂制备方法**：合成路线、制备条件、处理工艺
+- **实验条件**：反应温度、压力、时间等参数
+- **材料信息**：催化剂组成、载体、助剂等
+- **主要发现**：重要结论和创新点
+- **实验价值与启示**：研究意义和应用前景
+
+## 环境要求
+
+- Node.js 16+
+- Python 3.8+
+- 现代浏览器（Chrome、Firefox、Safari、Edge）
+- OpenRouter API密钥（用于AI分析功能）
+
+## 注意事项
+
+1. 首次启动时会自动安装依赖，请耐心等待
+2. 需要配置OpenRouter API密钥才能使用AI分析功能，请参考backend/.env.example文件
+3. 如遇端口冲突，前端会自动切换到可用端口（默认3002）
+4. 建议使用start.bat脚本启动以获得最佳体验
+5. 上传的PDF文件和分析结果会保存在本地backend目录下，请注意数据安全
+6. 应用支持虚拟滚动和分页加载，可处理大量文献数据
+7. WebSocket连接用于实时进度跟踪，请确保网络连接稳定
+
+## 开发状态
+
+当前版本：v1.0.0
+
+已实现功能：
+- ✅ PDF文档上传与存储
+- ✅ AI文档智能分析
+- ✅ 催化活性数据可视化
+- ✅ 实时聊天分析助手
+- ✅ WebSocket实时通信
+- ✅ 多文献数据对比
+- ✅ 响应式UI设计
+
+## 许可证
+
+本项目采用MIT许可证，详见LICENSE文件。
+
+## 贡献
+
+欢迎提交Issue和Pull Request来改进本项目。
+
+## 联系方式
+
+如有问题或建议，请通过GitHub Issues联系我们。

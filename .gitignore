@@ -1,23 +1,137 @@
-# 前端项目示例
+# 依赖和包管理
 node_modules/
 .cache/
 *.pack
+
+# 日志文件
 *.log
+logs/
+backend/logs/
 
-# 后端相关文件
-backend/logs/*.log
-backend/cache/
-backend/__pycache__/
+# Python相关
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# 虚拟环境
+.venv/
+venv/
+ENV/
+env/
+.env
+
+# 数据库文件（运行时生成）
+literature_analysis.db
 backend/literature_analysis.db
+*.sqlite
+*.sqlite3
+*.db
+
+# 上传和结果文件（运行时生成）
+backend/uploads/
+backend/results/
+backend/cache/
+backend/logs/
+
+# 用户上传的文档文件
 *.pdf
-*.docs
 *.doc
+*.docx
+*.txt
+*.rtf
 
-gemini-fullstack-langgraph-quickstart-main/
+# IDE和编辑器
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
 
-# YoYo AI version control directory
+# 操作系统
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# 临时文件
+*.tmp
+*.temp
+*.bak
+*.backup
+
+# 构建输出
+build/
+dist/
+
+# 测试覆盖率
+coverage/
+.nyc_output
+
+# API密钥和敏感配置
+.env.local
+.env.production
+*.key
+*.pem
+
+# AI和机器学习相关
 .yoyo/
+<<<<<<< HEAD
+models/
+*.pkl
+*.model
+*.weights
+
+# Git相关
+.git/
+*.orig
+*.rej
+
+# 重复的系统文件（已在上面定义）
+# *~
+# .DS_Store
+# *.swp
+# *.swo
+
+# 额外的忽略规则
+# 编辑器和IDE配置
+.vscode/settings.json
+.vscode/launch.json
+.idea/workspace.xml
+.idea/tasks.xml
+
+# 运行时生成的文件
+*.pid
+*.seed
+*.pid.lock
+
+# 压缩文件
+*.zip
+*.tar.gz
+*.rar
+*.7z
+=======
 
 # 上传文件和缓存
 backend/uploads/
 backend/__pycache__/
+>>>>>>> origin/master
