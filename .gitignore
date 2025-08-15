@@ -1,19 +1,80 @@
-# 前端项目示例
+# 依赖和包管理
 node_modules/
 .cache/
 *.pack
+
+# 日志文件
 *.log
+logs/
+backend/logs/
 
-#后端
-backend/logs/*.log
-backend/cache/
-backend/_pycache_/
-backend\literature_analysis.db
-*.pdf
-*.docs
-*.doc
+# Python相关
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
 
-gemini-fullstack-langgraph-quickstart-main/
+# 虚拟环境
+.venv/
+venv/
+ENV/
+env/
+.env
+
+# 数据库文件
+*.sqlite
+*.sqlite3
+
+# IDE和编辑器
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# 操作系统
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# 临时文件
+*.tmp
+*.temp
+*.bak
+*.backup
+
+# 构建输出
+build/
+dist/
+
+# 测试覆盖率
+coverage/
+.nyc_output
+
+# 根目录多余文件（实际项目在frontend/backend子目录）
+/package.json
+/package-lock.json
+/src/
 
 # YoYo AI version control directory
 .yoyo/

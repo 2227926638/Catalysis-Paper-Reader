@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Typography, Card, Upload, Button, List, Tag, Space, Progress, Divider, Empty, Modal, Radio, message } from 'antd';
+import { Typography, Card, Upload, Button, List, Tag, Space, Progress, Divider, Empty, Modal, message } from 'antd';
 import { InboxOutlined, FileTextOutlined, FileWordOutlined, DeleteOutlined, EyeOutlined, CheckCircleOutlined } from '@ant-design/icons';
 import { useAppContext } from '../context/AppContext';
 import { uploadApi } from '../services/api';
@@ -19,30 +19,13 @@ const UploadPage = () => {
   const [uploading, setUploading] = useState(false);
   const [previewVisible, setPreviewVisible] = useState(false);
   const [previewFile, setPreviewFile] = useState(null);
-  const [dropdownVisible, setDropdownVisible] = useState(false);
   const [aiChatVisible, setAiChatVisible] = useState(false);
   
   // 使用全局Context
   const { uploadedFiles, uploadCategory, updateUploadedFiles, updateUploadCategory } = useAppContext();
   const fileList = uploadedFiles;
   
-  // 引用
-  const dropdownRef = useRef(null);
-  
-  // 点击外部区域关闭下拉菜单
-  useEffect(() => {
-    function handleClickOutside(event) {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target) && 
-          !event.target.closest('button[value="其他"]')) {
-        setDropdownVisible(false);
-      }
-    }
-    
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, [dropdownRef]);
+
 
   /**
    * 文件上传配置
@@ -94,7 +77,7 @@ const UploadPage = () => {
     customRequest({ file, onSuccess, onError, onProgress }) {
       try {
         // 使用uploadApi进行文件上传
-        uploadApi.uploadFile(file, uploadCategory)
+        uploadApi.uploadFile(file)
           .then(response => {
             // 将后端返回的id转换为document_id并保存到file对象
             file.document_id = parseInt(response.id);
@@ -405,85 +388,6 @@ const UploadPage = () => {
         </Paragraph>
       </Typography>
 
-      <Card title="催化反应分类" style={{ marginBottom: 16 }}>
-        <div style={{ position: 'relative' }}>
-          <Radio.Group value={uploadCategory} onChange={e => {
-            if (e.target.value !== '其他') {
-              updateUploadCategory(e.target.value);
-              setDropdownVisible(false);
-            }
-          }}>
-            <Radio.Button value="合成氨">合成氨</Radio.Button>
-            <Radio.Button value="乙炔加氢">乙炔加氢</Radio.Button>
-            <Radio.Button value="一氧化碳氧化">一氧化碳氧化</Radio.Button>
-            <Radio.Button value="甲醇合成">甲醇合成</Radio.Button>
-            <Radio.Button value="烯烃聚合">烯烃聚合</Radio.Button>
-            <Radio.Button value="其他" onClick={(e) => {
-              e.preventDefault();
-              setDropdownVisible(!dropdownVisible);
-            }}>其他</Radio.Button>
-          </Radio.Group>
-          
-          {dropdownVisible && (
-            <div 
-              ref={dropdownRef}
-              style={{ 
-                position: 'absolute', 
-                backgroundColor: '#fff', 
-                boxShadow: '0 2px 8px rgba(0,0,0,0.15)', 
-                zIndex: 1000,
-                borderRadius: '4px',
-                marginTop: '8px',
-                padding: '8px 0',
-                width: '180px'
-              }}
-            >
-              <div style={{ padding: '8px 12px', cursor: 'pointer', hover: { backgroundColor: '#f5f5f5' } }} 
-                onClick={() => {
-                  updateUploadCategory('石油催化裂化');
-                  setDropdownVisible(false);
-                }}>
-                石油催化裂化
-              </div>
-              <div style={{ padding: '8px 12px', cursor: 'pointer' }} 
-                onClick={() => {
-                  updateUploadCategory('加氢脱硫');
-                  setDropdownVisible(false);
-                }}>
-                加氢脱硫
-              </div>
-              <div style={{ padding: '8px 12px', cursor: 'pointer' }} 
-                onClick={() => {
-                  updateUploadCategory('氧化脱氢');
-                  setDropdownVisible(false);
-                }}>
-                氧化脱氢
-              </div>
-              <div style={{ padding: '8px 12px', cursor: 'pointer' }} 
-                onClick={() => {
-                  updateUploadCategory('费托合成');
-                  setDropdownVisible(false);
-                }}>
-                费托合成
-              </div>
-              <div style={{ padding: '8px 12px', cursor: 'pointer' }} 
-                onClick={() => {
-                  updateUploadCategory('选择性催化还原');
-                  setDropdownVisible(false);
-                }}>
-                选择性催化还原
-              </div>
-              <div style={{ padding: '8px 12px', cursor: 'pointer' }} 
-                onClick={() => {
-                  updateUploadCategory('其他反应');
-                  setDropdownVisible(false);
-                }}>
-                其他反应
-              </div>
-            </div>
-          )}
-        </div>
-      </Card>
 
       <Card title="上传文件" style={{ marginBottom: 16 }}>
         <Dragger {...uploadProps} style={{ marginBottom: 16 }}>

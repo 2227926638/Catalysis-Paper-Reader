@@ -41,10 +41,9 @@ api.interceptors.response.use(
 
 // 文件上传相关API
 const uploadApi = {
-  uploadFile: (file, category) => {
+  uploadFile: (file) => {
     const formData = new FormData();
     formData.append('file', file);
-    formData.append('category', category);
     
     return api.post('/api/upload', formData, {
       headers: {

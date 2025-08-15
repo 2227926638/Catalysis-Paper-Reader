@@ -2,14 +2,14 @@ import os
 import PyPDF2
 from docx import Document
 from typing import Dict, Optional
-from cache_manager import CacheManager
+
 from logger_config import doc_logger
 
 class DocumentProcessor:
     """文档处理器，用于解析PDF和Word文档内容"""
     
     def __init__(self):
-        self.cache_manager = CacheManager()
+        pass
     
     @staticmethod
     def extract_pdf_content(file_path: str) -> Optional[str]:
@@ -103,12 +103,7 @@ class DocumentProcessor:
             ext = ext.lower()
             doc_logger.info(f"文件类型：{ext}，文件大小：{os.path.getsize(file_path)} 字节")
             
-            # 检查缓存中是否存在处理结果
-            doc_logger.info(f"检查文档 {document_id} 的缓存")
-            cached_data = self.cache_manager.get_from_cache(document_id)
-            if cached_data:
-                doc_logger.info(f"从缓存中获取文档 {document_id} 的处理结果")
-                return cached_data['processed_text']
+
             
             # 根据文件类型选择处理方法
             processed_text = None
@@ -130,17 +125,7 @@ class DocumentProcessor:
             doc_logger.info(f"文档内容提取成功，文本长度：{len(processed_text)}")
             doc_logger.debug(f"提取的文本前100个字符：{processed_text[:100]}...")
             
-            # 如果处理成功，保存到缓存
-            doc_logger.info(f"开始保存文档 {document_id} 的处理结果到缓存")
-            cache_file_path = self.cache_manager.save_to_cache(
-                document_id=document_id,
-                original_file_path=file_path,
-                processed_text=processed_text
-            )
-            if cache_file_path:
-                doc_logger.info(f"文档 {document_id} 的处理结果已保存到缓存: {cache_file_path}")
-            else:
-                doc_logger.warning(f"警告：文档 {document_id} 的处理结果缓存保存失败")
+
             
             return processed_text
         except Exception as e:

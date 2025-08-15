@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { Typography, Card, Table, Tag, Space, Button, Tabs, Input, Select, Collapse, Spin, Empty, message, Tooltip, Row, Col, Modal, List } from 'antd';
-import { FileTextOutlined, FileWordOutlined, DownloadOutlined, SearchOutlined, LineChartOutlined, RobotOutlined } from '@ant-design/icons';
+import { Typography, Card, Table, Tag, Space, Button, Tabs, Input, Select, Collapse, Spin, Empty, message, Tooltip, Row, Col, Modal, List, Switch } from 'antd';
+import { FileTextOutlined, FileWordOutlined, DownloadOutlined, SearchOutlined, LineChartOutlined, RobotOutlined, ThunderboltOutlined } from '@ant-design/icons';
 import AnalysisProgress from '../components/AnalysisProgress';
 import AIChat from '../components/AIChat';
+
 
 import { handleApiError } from '../utils/errorHandler';
 import websocketService from '../services/websocketService';
@@ -22,12 +23,17 @@ const AnalysisPage = () => {
   // 状态管理
   const [loading, setLoading] = useState(false);
   const [documents, setDocuments] = useState([]);
+  const [filteredDocuments, setFilteredDocuments] = useState([]);
   const [selectedDocument, setSelectedDocument] = useState(null);
   const [analysisResults, setAnalysisResults] = useState(null);
   const [progressVisible, setProgressVisible] = useState(false);
   const [progressDocumentId, setProgressDocumentId] = useState(null);
   const [aiChatVisible, setAiChatVisible] = useState(false);
   const [activeKeys, setActiveKeys] = useState([]); // 将初始状态设置为空数组，使所有面板默认收起
+
+  const [performanceMode, setPerformanceMode] = useState(false); // 性能模式开关
+  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState('all');
   
   /**
    * 组件挂载时获取文档列表
@@ -35,6 +41,43 @@ const AnalysisPage = () => {
   useEffect(() => {
     fetchDocuments();
   }, []);
+
+  /**
+   * 应用搜索和分类筛选
+   */
+  useEffect(() => {
+    let filtered = documents;
+
+    // 应用搜索筛选
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase();
+      filtered = filtered.filter(doc => 
+        doc.name.toLowerCase().includes(query) ||
+        (doc.category && doc.category.toLowerCase().includes(query))
+      );
+    }
+
+    // 应用分类筛选
+    if (selectedCategory !== 'all') {
+      filtered = filtered.filter(doc => doc.category === selectedCategory);
+    }
+
+    setFilteredDocuments(filtered);
+  }, [documents, searchQuery, selectedCategory]);
+
+  /**
+   * 处理分类筛选
+   */
+  const handleCategoryFilter = (category) => {
+    setSelectedCategory(category);
+  };
+
+  /**
+   * 处理搜索
+   */
+  const handleSearch = (value) => {
+    setSearchQuery(value);
+  };
 
   /**
    * 从API获取已分析的文档列表
@@ -54,10 +97,12 @@ const AnalysisPage = () => {
           return doc;
         });
         setDocuments(standardizedData);
+        setFilteredDocuments(standardizedData); // 初始化筛选后的文档列表
       } else {
         console.error('Invalid data format received from getDocuments API:', responseData);
         message.error('获取文档列表失败：数据格式不正确。');
-        setDocuments([]); // 设置为空数组以避免渲染错误
+        setDocuments([]);
+        setFilteredDocuments([]); // 设置为空数组以避免渲染错误
       }
       setLoading(false);
     } catch (error) {
@@ -255,7 +300,11 @@ const AnalysisPage = () => {
       key: 'category',
       width: '15%',
       align: 'center',
-      render: category => <Tag color="purple">{category}</Tag>,
+      render: category => (
+        <Tag color={category && category.trim() ? "purple" : "default"}>
+          {category && category.trim() ? category : "未分类"}
+        </Tag>
+      ),
     },
     {
       title: '状态',
@@ -445,20 +494,42 @@ const AnalysisPage = () => {
       if (typeof fieldValue === 'object' && fieldValue !== null) {
         const entries = Object.entries(fieldValue);
         if (entries.length === 0) return <Text type="secondary">暂无数据</Text>;
-        return (
-          <div style={{ paddingLeft: '0px' }}>
-            {entries.map(([key, value], index) => (
-              <div key={index} style={{ marginBottom: '8px' }}>
-                <Text strong>{key}: </Text>
-                {typeof value === 'object' && value !== null ? 
-                  <div style={{ paddingLeft: '16px', marginTop: '4px' }}>{renderDetailedContent(value)}</div> : 
-                  <Text>{String(value)}</Text>
-                }
-              </div>
-            ))
-          }
-          </div>
+        
+        // 检查是否是简单的键值对对象
+        const hasComplexValues = entries.some(([key, value]) => 
+          typeof value === 'object' && value !== null && !Array.isArray(value)
         );
+        
+        if (hasComplexValues) {
+          // 对于复杂对象，使用卡片布局
+          return (
+            <div style={{ paddingLeft: '0px' }}>
+              {entries.map(([key, value], index) => (
+                <Card key={index} size="small" title={key} style={{ marginBottom: '12px' }}>
+                  {typeof value === 'object' && value !== null ? 
+                    renderDetailedContent(value) : 
+                    <Text>{String(value)}</Text>
+                  }
+                </Card>
+              ))}
+            </div>
+          );
+        } else {
+          // 对于简单对象，使用原有的布局
+          return (
+            <div style={{ paddingLeft: '0px' }}>
+              {entries.map(([key, value], index) => (
+                <div key={index} style={{ marginBottom: '8px' }}>
+                  <Text strong>{key}: </Text>
+                  {typeof value === 'object' && value !== null ? 
+                    <div style={{ paddingLeft: '16px', marginTop: '4px' }}>{renderDetailedContent(value)}</div> : 
+                    <Text>{String(value)}</Text>
+                  }
+                </div>
+              ))}
+            </div>
+          );
+        }
       }
       return <Text>{String(fieldValue)}</Text>;
     };
@@ -554,43 +625,70 @@ const AnalysisPage = () => {
             </Typography>
           </Col>
           <Col>
-            <Button
-              type="primary"
-              icon={<RobotOutlined />}
-              onClick={() => setAiChatVisible(true)}
-              style={{ marginLeft: 16 }}
-            >
-              AI助手
-            </Button>
+            <Space>
+
+              <Tooltip title="启用性能模式以优化大文件处理">
+                <Space>
+                  <Switch
+                    checked={performanceMode}
+                    onChange={setPerformanceMode}
+                    size="small"
+                  />
+                  <span>性能模式</span>
+                </Space>
+              </Tooltip>
+              
+              <Button
+                type="primary"
+                icon={<RobotOutlined />}
+                onClick={() => setAiChatVisible(true)}
+              >
+                AI助手
+              </Button>
+            </Space>
           </Col>
         </Row>
       </div>
 
       <Card title="文献列表" style={{ marginBottom: 16 }}>
-        <div style={{ marginBottom: 16 }}>
-          <Space>
-            <Search
-              placeholder="搜索文献"
-              allowClear
-              style={{ width: 250 }}
-              onSearch={() => {}}
+          <>
+            <div style={{ marginBottom: 16 }}>
+              <Space>
+                <Search
+                  placeholder="搜索文献名称或分类"
+                  allowClear
+                  style={{ width: 250 }}
+                  value={searchQuery}
+                  onChange={(e) => handleSearch(e.target.value)}
+                  onSearch={handleSearch}
+                />
+                <Select 
+                  defaultValue="all" 
+                  style={{ width: 180 }}
+                  onChange={(value) => handleCategoryFilter(value)}
+                >
+                  <Option value="all">全部分类</Option>
+                  <Option value="合成氨">合成氨</Option>
+                  <Option value="甲烷干重整">甲烷干重整</Option>
+                  <Option value="一氧化碳加氢">一氧化碳加氢</Option>
+                  <Option value="甲醇合成">甲醇合成</Option>
+                  <Option value="乙炔加氢">乙炔加氢</Option>
+                  <Option value="一氧化碳氧化">一氧化碳氧化</Option>
+                  <Option value="烯烃聚合">烯烃聚合</Option>
+                  <Option value="费托合成">费托合成</Option>
+                  <Option value="选择性催化还原">选择性催化还原</Option>
+                  <Option value="其他反应">其他反应</Option>
+                </Select>
+                <Button type="primary" icon={<SearchOutlined />}>筛选</Button>
+              </Space>
+            </div>
+            <Table 
+              columns={columns} 
+              dataSource={filteredDocuments} 
+              loading={loading && !selectedDocument}
+              rowKey="id"
             />
-            <Select defaultValue="all" style={{ width: 150 }}>
-              <Option value="all">全部分类</Option>
-              <Option value="材料科学">材料科学</Option>
-              <Option value="化学工程">化学工程</Option>
-              <Option value="物理学">物理学</Option>
-              <Option value="计算机科学">计算机科学</Option>
-            </Select>
-            <Button type="primary" icon={<SearchOutlined />}>筛选</Button>
-          </Space>
-        </div>
-        <Table 
-          columns={columns} 
-          dataSource={documents} 
-          loading={loading && !selectedDocument}
-          rowKey="id"
-        />
+          </>
       </Card>
 
       <Card title="分析结果">

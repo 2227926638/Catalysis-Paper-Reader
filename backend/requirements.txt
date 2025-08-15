@@ -5,6 +5,7 @@ python-multipart==0.0.6
 pydantic>=2.8.0,<3.0.0
 python-dotenv==1.0.0
 requests==2.31.0
+openai>=1.0.0
 huggingface-hub==0.19.4
 numpy==1.26.2
 sqlalchemy==2.0.23
